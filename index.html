@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pay via QR</title>
+<title>Pay via QR or API</title>
 <style>
 *{
     margin:0;
@@ -87,7 +87,7 @@ body{
     margin:25px;
     text-align:center;
 }
-.button a{
+.button a, .button button{
     display:block;
     text-decoration:none;
     padding:15px;
@@ -95,6 +95,9 @@ body{
     color:#fff;
     font-size:18px;
     font-weight:bold;
+    border:none;
+    cursor:pointer;
+    width:100%;
 }
 .maya-btn{
     background:#00B14F;
@@ -102,41 +105,80 @@ body{
 .gcash-btn{
     background:#0066FF;
 }
+.amount-input {
+    margin: 15px 25px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+}
+.status {
+    text-align: center;
+    margin: 10px 25px;
+    padding: 10px;
+    border-radius: 8px;
+    display: none;
+}
 .footer{
     text-align:center;
     margin-top:30px;
     color:#555;
-}
-@media(max-width:600px){
-.title h1{
-    font-size:28px;
-}
-.qr img{
-    width:220px;
-}
 }
 </style>
 </head>
 <body>
 <div class="container">
 <div class="title">
-<h1>💳 Pay via QR Code</h1>
-<p>Scan using Maya or GCash</p>
+<h1>💳 Pay via QR or API</h1>
+<p>Scan or Pay with GCash Instantly</p>
 </div>
+
 <div class="cards">
-<!-- MAYA -->
+<!-- GCASH CARD -->
+<div class="card">
+<div class="header gcash">
+PAY WITH GCASH
+</div>
+<div class="qr">
+<img src="gcash-qr.jpg" alt="GCash QR">
+<div class="name">LYCEL LANAJA</div>
+<div class="number">+63 915 506 0454</div>
+<div class="note">
+Open the GCash App<br>
+Tap <b>QR Scan</b><br>
+Scan this QR Code
+</div>
+</div>
+
+<div class="amount-input">
+    <label>Amount (PHP):</label>
+    <input type="number" id="amount" placeholder="Enter amount" value="100" style="width:100%;">
+</div>
+
+<div class="button">
+    <button onclick="initiateGCashPayment()" class="gcash-btn">
+        💸 Pay with GCash (API)
+    </button>
+</div>
+
+<div id="status" class="status"></div>
+
+<div class="button">
+    <a href="gcash://" class="gcash-btn">
+        Open GCash App
+    </a>
+</div>
+</div>
+
+<!-- MAYA CARD (unchanged) -->
 <div class="card">
 <div class="header maya">
 PAY WITH MAYA
 </div>
 <div class="qr">
 <img src="maya-qr.jpg" alt="Maya QR">
-<div class="name">
-LYCEL LANAJA
-</div>
-<div class="number">
-+63 915 506 0454
-</div>
+<div class="name">LYCEL LANAJA</div>
+<div class="number">+63 915 506 0454</div>
 <div class="note">
 Open the Maya App<br>
 Tap <b>Scan</b><br>
@@ -149,36 +191,71 @@ Scan Using Maya
 </a>
 </div>
 </div>
-<!-- GCASH -->
-<div class="card">
-<div class="header gcash">
-PAY WITH GCASH
 </div>
-<div class="qr">
-<img src="gcash-qr.jpg" alt="GCash QR">
-<div class="name">
-LYCEL LANAJA
-</div>
-<div class="number">
-+63 915 506 0454
-</div>
-<div class="note">
-Open the GCash App<br>
-Tap <b>QR Scan</b><br>
-Scan this QR Code
-</div>
-</div>
-<div class="button">
-<a href="gcash://" class="gcash-btn">
-Open GCash & Pay
-</a>
-</div>
-</div>
-</div>
+
 <div class="footer">
 <h3>Thank you for supporting our WiFi Service ❤️</h3>
 <p>After payment, please present your receipt or transaction reference.</p>
 </div>
 </div>
+
+<script>
+// =============== GCASH PAYMENT API INTEGRATION ===============
+async function initiateGCashPayment() {
+    const amount = parseFloat(document.getElementById('amount').value);
+    const statusEl = document.getElementById('status');
+
+    if (!amount || amount <= 0) {
+        showStatus("Please enter a valid amount", "red");
+        return;
+    }
+
+    showStatus("Initiating GCash payment...", "blue");
+
+    try {
+        // Replace with your backend endpoint
+        const response = await fetch('/api/gcash/create-payment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                amount: amount * 100,           // in centavos (e.g. 100 PHP = 10000)
+                currency: "PHP",
+                description: "WiFi Service Payment",
+                customer: {
+                    name: "Customer Name",
+                    email: "customer@example.com",
+                    phone: "+639155060454"
+                }
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.checkout_url) {
+            showStatus("Redirecting to GCash...", "green");
+            // Redirect to GCash hosted checkout / app deep link
+            window.location.href = data.checkout_url;
+        } else if (data.qr_code) {
+            // Optional: show dynamic QR if backend returns one
+            showStatus("Scan the QR code below", "green");
+        } else {
+            showStatus("Payment initiation failed: " + (data.message || 'Unknown error'), "red");
+        }
+    } catch (error) {
+        console.error(error);
+        showStatus("Network error. Please try again.", "red");
+    }
+}
+
+function showStatus(message, color) {
+    const statusEl = document.getElementById('status');
+    statusEl.textContent = message;
+    statusEl.style.display = 'block';
+    statusEl.style.background = color === 'green' ? '#d4edda' : color === 'red' ? '#f8d7da' : '#cce5ff';
+    statusEl.style.color = color === 'green' ? '#155724' : color === 'red' ? '#721c24' : '#004085';
+}
+</script>
 </body>
 </html>
