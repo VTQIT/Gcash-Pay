@@ -71,8 +71,7 @@ body{
     border-radius:12px;
     border:8px solid #fff;
     box-shadow:0 4px 15px rgba(0,0,0,0.1);
-    image-rendering: crisp-edges;           /* Better QR sharpness */
-    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
 }
 .name{
     margin-top:15px;
@@ -82,6 +81,20 @@ body{
 .number{
     color:#666;
     margin-top:5px;
+    font-size:18px;
+}
+.copy-btn{
+    background:#28a745;
+    color:white;
+    border:none;
+    padding:8px 16px;
+    border-radius:20px;
+    font-size:14px;
+    cursor:pointer;
+    margin-top:8px;
+}
+.copy-btn:active{
+    background:#218838;
 }
 .note{
     margin-top:15px;
@@ -92,7 +105,7 @@ body{
     margin:20px 25px;
     text-align:center;
 }
-.button a{
+.button a, .button button{
     display:block;
     text-decoration:none;
     padding:14px;
@@ -100,6 +113,7 @@ body{
     color:#fff;
     font-size:17px;
     font-weight:bold;
+    margin-bottom:10px;
 }
 .maya-btn{
     background:#00B14F;
@@ -109,8 +123,17 @@ body{
 }
 .download-btn{
     background:#555;
-    margin-top:8px;
     font-size:15px;
+}
+.reminder{
+    background:#fff3cd;
+    color:#856404;
+    padding:12px;
+    margin:15px 25px;
+    border-radius:8px;
+    font-size:14px;
+    text-align:center;
+    border-left:4px solid #ffc107;
 }
 .footer{
     text-align:center;
@@ -123,7 +146,7 @@ body{
 <div class="container">
 <div class="title">
 <h1>💳 Pay via QR Code</h1>
-<p>Scan using Maya or GCash • High Quality QR</p>
+<p>Scan using Maya or GCash</p>
 </div>
 
 <div class="cards">
@@ -133,9 +156,11 @@ body{
 PAY WITH MAYA
 </div>
 <div class="qr">
-<img src="maya-qr.jpg" alt="Maya QR Code" id="maya-qr">
+<img src="maya-qr.jpg" alt="Maya QR Code">
 <div class="name">LYCEL LANAJA</div>
-<div class="number">+63 915 506 0454</div>
+<div class="number">+639155060454 
+    <button class="copy-btn" onclick="copyNumber(this)">Copy</button>
+</div>
 <div class="note">
 Open the Maya App<br>
 Tap <b>Scan</b><br>
@@ -146,6 +171,9 @@ Scan this QR Code
 <a href="#" class="maya-btn">Scan Using Maya</a>
 <a href="maya-qr.jpg" download="Maya-QR-Code.jpg" class="button download-btn">⬇️ Download Maya QR</a>
 </div>
+<div class="reminder">
+📸 Please screenshot or save your transaction receipt after payment
+</div>
 </div>
 
 <!-- GCASH -->
@@ -154,9 +182,11 @@ Scan this QR Code
 PAY WITH GCASH
 </div>
 <div class="qr">
-<img src="gcash-qr.jpg" alt="GCash QR Code" id="gcash-qr">
+<img src="gcash-qr.jpg" alt="GCash QR Code">
 <div class="name">LYCEL LANAJA</div>
-<div class="number">+63 915 506 0454</div>
+<div class="number">+639155060454 
+    <button class="copy-btn" onclick="copyNumber(this)">Copy</button>
+</div>
 <div class="note">
 Open the GCash App<br>
 Tap <b>QR Scan</b><br>
@@ -166,6 +196,9 @@ Scan this QR Code
 <div class="button">
 <a href="gcash://" class="gcash-btn">Open GCash App</a>
 <a href="gcash-qr.jpg" download="GCash-QR-Code.jpg" class="button download-btn">⬇️ Download GCash QR</a>
+</div>
+<div class="reminder">
+📸 Please screenshot or save your transaction receipt after payment
 </div>
 </div>
 </div>
@@ -177,13 +210,19 @@ Scan this QR Code
 </div>
 
 <script>
-// Optional: Force high quality rendering
-document.getElementById('maya-qr').addEventListener('load', () => {
-    this.style.imageRendering = 'crisp-edges';
-});
-document.getElementById('gcash-qr').addEventListener('load', () => {
-    this.style.imageRendering = 'crisp-edges';
-});
+function copyNumber(btn) {
+    const number = "+63 915 506 0454";
+    navigator.clipboard.writeText(number).then(() => {
+        const originalText = btn.textContent;
+        btn.textContent = "Copied!";
+        btn.style.background = "#218838";
+        
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.background = "#28a745";
+        }, 2000);
+    });
+}
 </script>
 </body>
 </html>
