@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pay via QR or API</title>
+<title>Pay via QR Code</title>
 <style>
 *{
     margin:0;
@@ -62,12 +62,17 @@ body{
 .qr{
     padding:25px;
     text-align:center;
+    background:#f8f9fa;
 }
 .qr img{
-    width:250px;
+    width:280px;
     max-width:100%;
-    border-radius:10px;
-    border:6px solid #eee;
+    height:auto;
+    border-radius:12px;
+    border:8px solid #fff;
+    box-shadow:0 4px 15px rgba(0,0,0,0.1);
+    image-rendering: crisp-edges;           /* Better QR sharpness */
+    image-rendering: -webkit-optimize-contrast;
 }
 .name{
     margin-top:15px;
@@ -81,23 +86,20 @@ body{
 .note{
     margin-top:15px;
     color:#777;
-    line-height:1.5;
+    line-height:1.6;
 }
 .button{
-    margin:25px;
+    margin:20px 25px;
     text-align:center;
 }
-.button a, .button button{
+.button a{
     display:block;
     text-decoration:none;
-    padding:15px;
+    padding:14px;
     border-radius:50px;
     color:#fff;
-    font-size:18px;
+    font-size:17px;
     font-weight:bold;
-    border:none;
-    cursor:pointer;
-    width:100%;
 }
 .maya-btn{
     background:#00B14F;
@@ -105,19 +107,10 @@ body{
 .gcash-btn{
     background:#0066FF;
 }
-.amount-input {
-    margin: 15px 25px;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 16px;
-}
-.status {
-    text-align: center;
-    margin: 10px 25px;
-    padding: 10px;
-    border-radius: 8px;
-    display: none;
+.download-btn{
+    background:#555;
+    margin-top:8px;
+    font-size:15px;
 }
 .footer{
     text-align:center;
@@ -129,54 +122,18 @@ body{
 <body>
 <div class="container">
 <div class="title">
-<h1>💳 Pay via QR or API</h1>
-<p>Scan or Pay with GCash Instantly</p>
+<h1>💳 Pay via QR Code</h1>
+<p>Scan using Maya or GCash • High Quality QR</p>
 </div>
 
 <div class="cards">
-<!-- GCASH CARD -->
-<div class="card">
-<div class="header gcash">
-PAY WITH GCASH
-</div>
-<div class="qr">
-<img src="gcash-qr.jpg" alt="GCash QR">
-<div class="name">LYCEL LANAJA</div>
-<div class="number">+63 915 506 0454</div>
-<div class="note">
-Open the GCash App<br>
-Tap <b>QR Scan</b><br>
-Scan this QR Code
-</div>
-</div>
-
-<div class="amount-input">
-    <label>Amount (PHP):</label>
-    <input type="number" id="amount" placeholder="Enter amount" value="100" style="width:100%;">
-</div>
-
-<div class="button">
-    <button onclick="initiateGCashPayment()" class="gcash-btn">
-        💸 Pay with GCash (API)
-    </button>
-</div>
-
-<div id="status" class="status"></div>
-
-<div class="button">
-    <a href="gcash://" class="gcash-btn">
-        Open GCash App
-    </a>
-</div>
-</div>
-
-<!-- MAYA CARD (unchanged) -->
+<!-- MAYA -->
 <div class="card">
 <div class="header maya">
 PAY WITH MAYA
 </div>
 <div class="qr">
-<img src="maya-qr.jpg" alt="Maya QR">
+<img src="maya-qr.jpg" alt="Maya QR Code" id="maya-qr">
 <div class="name">LYCEL LANAJA</div>
 <div class="number">+63 915 506 0454</div>
 <div class="note">
@@ -186,9 +143,29 @@ Scan this QR Code
 </div>
 </div>
 <div class="button">
-<a href="#" class="maya-btn">
-Scan Using Maya
-</a>
+<a href="#" class="maya-btn">Scan Using Maya</a>
+<a href="maya-qr.jpg" download="Maya-QR-Code.jpg" class="button download-btn">⬇️ Download Maya QR</a>
+</div>
+</div>
+
+<!-- GCASH -->
+<div class="card">
+<div class="header gcash">
+PAY WITH GCASH
+</div>
+<div class="qr">
+<img src="gcash-qr.jpg" alt="GCash QR Code" id="gcash-qr">
+<div class="name">LYCEL LANAJA</div>
+<div class="number">+63 915 506 0454</div>
+<div class="note">
+Open the GCash App<br>
+Tap <b>QR Scan</b><br>
+Scan this QR Code
+</div>
+</div>
+<div class="button">
+<a href="gcash://" class="gcash-btn">Open GCash App</a>
+<a href="gcash-qr.jpg" download="GCash-QR-Code.jpg" class="button download-btn">⬇️ Download GCash QR</a>
 </div>
 </div>
 </div>
@@ -200,62 +177,13 @@ Scan Using Maya
 </div>
 
 <script>
-// =============== GCASH PAYMENT API INTEGRATION ===============
-async function initiateGCashPayment() {
-    const amount = parseFloat(document.getElementById('amount').value);
-    const statusEl = document.getElementById('status');
-
-    if (!amount || amount <= 0) {
-        showStatus("Please enter a valid amount", "red");
-        return;
-    }
-
-    showStatus("Initiating GCash payment...", "blue");
-
-    try {
-        // Replace with your backend endpoint
-        const response = await fetch('/api/gcash/create-payment', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                amount: amount * 100,           // in centavos (e.g. 100 PHP = 10000)
-                currency: "PHP",
-                description: "WiFi Service Payment",
-                customer: {
-                    name: "Customer Name",
-                    email: "customer@example.com",
-                    phone: "+639155060454"
-                }
-            })
-        });
-
-        const data = await response.json();
-
-        if (data.success && data.checkout_url) {
-            showStatus("Redirecting to GCash...", "green");
-            // Redirect to GCash hosted checkout / app deep link
-            window.location.href = data.checkout_url;
-        } else if (data.qr_code) {
-            // Optional: show dynamic QR if backend returns one
-            showStatus("Scan the QR code below", "green");
-        } else {
-            showStatus("Payment initiation failed: " + (data.message || 'Unknown error'), "red");
-        }
-    } catch (error) {
-        console.error(error);
-        showStatus("Network error. Please try again.", "red");
-    }
-}
-
-function showStatus(message, color) {
-    const statusEl = document.getElementById('status');
-    statusEl.textContent = message;
-    statusEl.style.display = 'block';
-    statusEl.style.background = color === 'green' ? '#d4edda' : color === 'red' ? '#f8d7da' : '#cce5ff';
-    statusEl.style.color = color === 'green' ? '#155724' : color === 'red' ? '#721c24' : '#004085';
-}
+// Optional: Force high quality rendering
+document.getElementById('maya-qr').addEventListener('load', () => {
+    this.style.imageRendering = 'crisp-edges';
+});
+document.getElementById('gcash-qr').addEventListener('load', () => {
+    this.style.imageRendering = 'crisp-edges';
+});
 </script>
 </body>
 </html>
