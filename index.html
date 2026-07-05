@@ -193,6 +193,74 @@
       border-radius: 4px;
       font-size: 0.8rem;
     }
+	
+	.popup{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.92);
+    z-index:9999;
+    justify-content:center;
+    align-items:center;
+    overflow:hidden;
+}
+
+.popup img{
+    max-width:95%;
+    max-height:90%;
+    border-radius:12px;
+    animation:slideIn .3s ease;
+}
+
+.close{
+    position:absolute;
+    top:20px;
+    right:25px;
+    color:#fff;
+    font-size:40px;
+    cursor:pointer;
+    user-select:none;
+}
+
+.nav{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    color:#fff;
+    font-size:50px;
+    cursor:pointer;
+    padding:15px;
+    user-select:none;
+}
+
+.prev{
+    left:15px;
+}
+
+.next{
+    right:15px;
+}
+
+@keyframes slideIn{
+    from{
+        opacity:0;
+        transform:translateX(80px);
+    }
+    to{
+        opacity:1;
+        transform:translateX(0);
+    }
+}
+
+@media(max-width:768px){
+    .nav{
+        font-size:38px;
+    }
+
+    .close{
+        font-size:34px;
+    }
+}
   </style>
 </head>
 <body>
@@ -217,11 +285,23 @@
 
       <div class="voucher-grid" id="public-grid"></div>
 
-      <div style="text-align:center; margin:1.5rem 0;">
-        <span style="background:#d9ecfa; padding:0.5rem 1.4rem; border-radius:50px; font-weight:700;">
-          <i class="fas fa-link"></i> CONNECT MORE. WORRY LESS.
-        </span>
-      </div>
+<div style="text-align:center; margin:1.5rem 0;">
+    <a href="#" id="promoBtn"
+        style="display:inline-block;background:#d9ecfa;padding:0.5rem 1.4rem;border-radius:50px;font-weight:700;color:#000;text-decoration:none;">
+        <i class="fas fa-link"></i> CONNECT MORE. WORRY LESS.
+    </a>
+</div>
+
+<!-- Popup -->
+<div id="imagePopup" class="popup">
+    <span class="close">&times;</span>
+
+    <span class="nav prev">&#10094;</span>
+
+    <img id="popupImage" src="images/promo1.jpg" alt="Promo">
+
+    <span class="nav next">&#10095;</span>
+</div>
 
       <div class="cta-section">
         <div style="font-weight:700; color:#003b5e;">GET YOUR VOUCHER NOW!</div>
@@ -543,6 +623,75 @@
     if (isLocalFile()) {
       console.log('📢 Running from local file. YouTube embeds will show a link instead.');
     }
+	
+	const images = [
+    "images/Voucher-promo.png",
+    "images/Voucher-Movie-pass.png",
+    "images/Voucher-movies-02.jpg",
+	"images/movies.png",
+    "images/movies-01.png"
+];
+
+let current = 0;
+
+const popup = document.getElementById("imagePopup");
+const img = document.getElementById("popupImage");
+
+document.getElementById("promoBtn").onclick = function(e){
+    e.preventDefault();
+    current = 0;
+    img.src = images[current];
+    popup.style.display = "flex";
+};
+
+function showImage(index){
+    img.style.animation = "none";
+    void img.offsetWidth; // restart animation
+
+    img.src = images[index];
+    img.style.animation = "slideIn .3s ease";
+}
+
+document.querySelector(".next").onclick = () => {
+    current = (current + 1) % images.length;
+    showImage(current);
+};
+
+document.querySelector(".prev").onclick = () => {
+    current = (current - 1 + images.length) % images.length;
+    showImage(current);
+};
+
+document.querySelector(".close").onclick = () => {
+    popup.style.display = "none";
+};
+
+popup.onclick = (e)=>{
+    if(e.target===popup){
+        popup.style.display="none";
+    }
+};
+
+// Swipe support for mobile
+let startX = 0;
+
+popup.addEventListener("touchstart",e=>{
+    startX = e.touches[0].clientX;
+});
+
+popup.addEventListener("touchend",e=>{
+    let endX = e.changedTouches[0].clientX;
+
+    if(startX - endX > 50){
+        current = (current + 1) % images.length;
+        showImage(current);
+    }
+
+    if(endX - startX > 50){
+        current = (current - 1 + images.length) % images.length;
+        showImage(current);
+    }
+});
   </script>
 </body>
 </html>
